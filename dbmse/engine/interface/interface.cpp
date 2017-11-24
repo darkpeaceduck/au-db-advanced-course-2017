@@ -84,6 +84,7 @@ LJoinNode::LJoinNode(LAbstractNode* left, LAbstractNode* right,
 
   for (int i = 0; i < right->fieldNames.size(); i++){
     std::vector<std::string> r = right->fieldNames[i];
+
     if(std::find(r.begin(), r.end(), offset1) == r.end())
       if(std::find(r.begin(), r.end(), offset2) == r.end()){
         fieldNames.push_back(r);
@@ -91,8 +92,8 @@ LJoinNode::LJoinNode(LAbstractNode* left, LAbstractNode* right,
         fieldOrders.push_back(CS_UNKNOWN);
 
       }
-
   }
+
   fieldNames.push_back(match);
   fieldTypes.push_back(vt);
   fieldOrders.push_back(cs);
@@ -105,17 +106,17 @@ LJoinNode::~LJoinNode(){
 }
 
 LProjectNode::LProjectNode(LAbstractNode* child, std::vector<std::string> tokeep):LAbstractNode(child, NULL){
-  for (int i = 0; i < left->fieldNames.size(); i++){
     for (int j = 0; j < tokeep.size(); j++){
-      std::vector<std::string> source = left->fieldNames[i];
-      std::string candidate = tokeep[j];
-      if(std::find(source.begin(), source.end(), candidate) != source.end()){
-        fieldNames.push_back(source);
-        fieldTypes.push_back(left->fieldTypes[i]);
-        fieldOrders.push_back(left->fieldOrders[i]);
-        continue;
-      }
-    }
+    	for (int i = 0; i < left->fieldNames.size(); i++){
+				std::vector<std::string> source = left->fieldNames[i];
+				std::string candidate = tokeep[j];
+				if(std::find(source.begin(), source.end(), candidate) != source.end()){
+					fieldNames.push_back(source);
+					fieldTypes.push_back(left->fieldTypes[i]);
+					fieldOrders.push_back(left->fieldOrders[i]);
+					break;
+				}
+    	}
   }
 }
 
@@ -142,6 +143,10 @@ BaseTable& LSelectNode::GetBaseTable(){
   return table;
 }
 
+std::vector<Predicate> LSelectNode::GetAllPredicates() {
+	return predicates;
+}
+
 std::tuple<int, Predicate> LSelectNode::GetNextPredicate(){
   if(predicates.size() == 0 || iteratorpos >= predicates.size()){
       return std::make_tuple(1, Predicate());
@@ -157,10 +162,14 @@ void LSelectNode::ResetIterator(){
 LSelectNode::~LSelectNode(){
 }
 
-LUniqueNode::LUniqueNode(LAbstractNode* child):LAbstractNode(child, NULL){
+LUniqueNode::LUniqueNode(LAbstractNode* child): LAbstractNode(child, NULL){
+	fieldNames = child->fieldNames;
+	fieldTypes = child->fieldTypes;
+	fieldOrders = child->fieldOrders;
 }
 
 LUniqueNode::~LUniqueNode(){
+	delete left;
 }
 
 
@@ -185,3 +194,4 @@ std::tuple<ErrCode, std::vector<Value>> PResultNode::GetRecord(){
   pos++;
   return std::make_tuple(EC_OK, vals);
 }
+

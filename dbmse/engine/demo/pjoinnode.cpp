@@ -38,6 +38,7 @@ std::vector<std::vector<Value>> PJoinNode::GetNext(){
 }
 
 void PJoinNode::Initialize(){
+
   PGetNextNode* l = (PGetNextNode*)left;
   PGetNextNode* r = (PGetNextNode*)right;
   LAbstractNode* lp = l->prototype;
@@ -72,6 +73,7 @@ void PJoinNode::Initialize(){
    }
   }
 
+
   ValueType vt = lp->fieldTypes[lpos];
 
   for (int i = 0; i < lres.size(); i++)
@@ -99,7 +101,6 @@ void PJoinNode::Initialize(){
       }
 
       tmp.push_back(lres[i][lpos]);
-
 
       data.push_back(tmp);
     }

@@ -28,12 +28,23 @@
 #include <fstream>
 
 
+enum ErrCode{
+  EC_OK,
+  EC_FINISH,
+  EC_ERROR
+};
+
+inline ErrCode bool2Err(bool v) {
+	return v ?  EC_OK : EC_ERROR;
+}
+
 const int MAXLEN = 1000;
 
 enum ValueType : short{
   VT_INT,
   VT_STRING
 };
+
 
 enum COLUMN_SORT{
     CS_ASCENDING,
@@ -55,12 +66,15 @@ struct Value{
   Value(std::string v){
     vtype = VT_STRING;
     vstr = v;
+    vint = 0;
   }
   Value(){
     vtype = VT_INT;
     vint = 0;
     vstr = "";
   }
+  bool operator==(const Value &v);
+  bool operator>(const Value &v);
   operator int() const {return vint;}
   operator std::string() const {return vstr;}
   ~Value(){
@@ -92,15 +106,17 @@ struct Predicate{
     this->vint = p.vint;
     this->vstr = p.vstr;
   }
+  ErrCode operator()(int attr, const Value &v);
   Predicate(){}
   ~Predicate(){}
 };
 
 inline std::ostream& operator<<(std::ostream& stream, const Predicate& p){
+	stream << "x(" << p.attribute << ") ";
   if (p.ptype == PT_EQUALS)
-    stream << "x == ";
+    stream << "== ";
   else
-    stream << "x < ";
+    stream << "> ";
 
   if(p.vtype == VT_INT)
       stream << p.vint;
@@ -178,11 +194,41 @@ inline std::ostream& operator<<(std::ostream& stream, const BaseTable& bt){
   return stream;
 }
 
+inline ErrCode Predicate::operator ()(int attr, const Value& v) {
+	if (attr != this->attribute)
+		return EC_OK;
+	if (v.vtype != this->vtype)
+		return EC_ERROR;
+	if (this->ptype == PT_EQUALS) {
+		if (this->vtype == VT_INT)
+					return bool2Err(v.vint == this->vint);
+				else
+					return bool2Err(v.vstr == this->vstr);
+	} else if (this->ptype == PT_GREATERTHAN){
+		if (this->vtype == VT_INT)
+				return bool2Err(v.vint > this->vint );
+			else
+				return bool2Err(v.vstr > this->vstr  );
+	}
+	return EC_ERROR;
+}
 
-enum ErrCode{
-  EC_OK,
-  EC_FINISH,
-  EC_ERROR
-};
+inline bool Value::operator == (const Value& v) {
+		if (this->vtype == VT_INT)
+			return (v.vint == this->vint);
+		else
+			return (v.vstr == this->vstr);
+}
+
+inline bool Value::operator >(const Value& v) {
+	if (this->vtype != v.vtype) {
+		return (this->vtype == VT_STRING);
+	}
+	if (this->vtype == VT_INT)
+			return (this->vint > v.vint);
+		else
+			return (this->vstr > v.vstr);
+	return false;
+}
 
 #endif // BASICS_H

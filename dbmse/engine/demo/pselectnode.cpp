@@ -24,10 +24,9 @@
 #include <string.h>
 #include <vector>
 #include <sstream>
+#include <tuple>
 
 #include "pselectnode.h"
-
-PSelectNode::PSelectNode(){}
 
 PSelectNode::PSelectNode(LAbstractNode* p, std::vector<Predicate> predicate): PGetNextNode(){
   this->table = ((LSelectNode*)p)->GetBaseTable();
@@ -43,8 +42,9 @@ PSelectNode::~PSelectNode(){
 
 void PSelectNode::Initialize(){
   int val = 0;
-  std::string line, word;
+  std::string line = "", word = "";
   std::ifstream f(table.relpath);
+
   if(f.is_open()){
     // skipping first 4 lines
     getline(f, line);
@@ -53,20 +53,32 @@ void PSelectNode::Initialize(){
     getline(f, line);
 
     while(getline(f, line)){
-      std::vector<Value> tmp;
+    	LSelectNode * selnode =  dynamic_cast<LSelectNode *>(prototype);
+    	std::vector<Value> tmp;
       std::istringstream iss(line, std::istringstream::in);
-      int i = 0;
-      while (iss >> word){
+      bool skip_row = false;
+      for (int i = 0; (iss >> word); i++) {
         // Yeah, no predicates :) -- Homework
-        Value h;
+      	Value h;
         if (prototype->fieldTypes[i] == VT_INT)
           h = Value(std::stoi(word));
         else
           h = Value(word);
+
+        for (auto &pr : predicate) {
+					if (pr (i, h) == EC_ERROR) {
+							skip_row = true;
+							break;
+					}
+				}
+
         tmp.push_back(h);
-        i++;
+
+        if (skip_row)
+        	break;
       }
-      data.push_back(tmp);
+      if (!skip_row)
+      	data.push_back(tmp);
     }
     f.close();
   } else std::cout << "Unable to open file";
@@ -80,11 +92,11 @@ void PSelectNode::Print(int indent){
   for (int i = 0; i < indent; i++){
     std::cout<<" ";
   }
-  std::cout<<"SCAN "<<table.relpath<<" with predicate ";
-  if(predicate.size() != 0)
-    std::cout<<predicate[0];
-  else
-    std::cout<<"NULL"<<std::endl;
+  std::cout<<"SCAN "<<table.relpath<<" with predicates ";
+  for (auto & pr : predicate) {
+    std::cout<< "[" << pr << "] ";
+  }
+  std::cout << std::endl;
   if(left != NULL) left->Print(indent + 2);
   if(right != NULL) right->Print(indent + 2);
 }

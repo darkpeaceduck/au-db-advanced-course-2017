@@ -76,6 +76,7 @@ class LSelectNode : public LAbstractNode{
     LSelectNode(BaseTable& table, std::vector<Predicate> predicates);
     // returns a reference to BaseTable
     BaseTable& GetBaseTable();
+    std::vector<Predicate> GetAllPredicates();
     // returns end status and next predicate (if exists)
     std::tuple<int, Predicate> GetNextPredicate();
     // resets predicate iterator

@@ -1,8 +1,11 @@
 CC=g++
 #CXXFLAGS=-std=c++11
 CXXFLAGS=-std=c++11 -g -O0
-SRC=../interface/interface.cpp pgetnextnode.cpp pselectnode.cpp pjoinnode.cpp demo.cpp
-OBJ=../interface/interface.o pgetnextnode.o pselectnode.o pjoinnode.o demo.o
+SRC=../interface/interface.cpp pgetnextnode.cpp\
+ 	pselectnode.cpp pprojectnode.cpp pjoinnode.cpp\
+ 	crossproductnode.cpp puniquenode.cpp\
+ 	demo.cpp
+OBJ=$(SRC:.cpp=.o)
 
 all: demo
 
